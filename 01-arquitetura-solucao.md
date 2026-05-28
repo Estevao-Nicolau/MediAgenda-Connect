@@ -1,6 +1,6 @@
 # 01 — Arquitetura de Solução
 
-<!-- Adicione o print da página 01 aqui -->
+<img width="3147" height="1171" alt="01 — Arquitetura de Solução drawio" src="https://github.com/user-attachments/assets/2e8619df-41cd-4d81-9edb-671023a6df8e" />
 
 Este diagrama é a porta de entrada para entender o MediAgenda Connect como um todo. Ele não desce para detalhes técnicos ainda — o objetivo é mostrar quem usa a plataforma, por onde entra, o que ela faz internamente e com quem ela conversa do lado de fora.
 
