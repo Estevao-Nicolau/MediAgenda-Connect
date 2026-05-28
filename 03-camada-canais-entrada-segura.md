@@ -1,6 +1,6 @@
 # 03 — Camada 1: Canais e Entrada Segura
 
-<img width="1591" height="816" alt="03 — Camada 1_ Canais e Entrada Segura drawio" src="https://github.com/user-attachments/assets/b7001ed8-0c28-4a31-86a3-16d82bfc59b6" />
+<img width="1811" height="1415" alt="04 — Camada 2_ Core de Agendamento drawio" src="https://github.com/user-attachments/assets/4a5416b8-f10e-4b2f-a5b9-e2878e8e747b" />
 
 
 Antes de qualquer requisição chegar a um serviço de negócio, ela passa por quatro componentes que formam a fronteira da plataforma. Esse diagrama detalha cada um deles e mostra como eles se encadeiam.
