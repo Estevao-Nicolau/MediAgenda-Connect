@@ -1,6 +1,6 @@
 # 06 — Camada 4: Eventos, Filas e Resiliência
 
-<img width="2242" height="1286" alt="06 — Camada 4_ Eventos, Filas e Resiliência drawio" src="https://github.com/user-attachments/assets/0f603fe2-0f21-4543-a622-daa4f58d7c67" />
+<img width="2011" height="1041" alt="07 — Camada 5_ Dados, Indicadores e Analytics drawio" src="https://github.com/user-attachments/assets/b9c1bf06-70bb-49c1-af30-7d8c59652468" />
 
 
 Uma das decisões mais importantes da arquitetura foi garantir que uma falha externa uma operadora indisponível, um provedor de SMS sobrecarregado não trave a jornada do paciente. Este diagrama mostra como isso é feito.
