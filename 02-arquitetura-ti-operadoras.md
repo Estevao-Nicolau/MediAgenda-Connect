@@ -1,6 +1,7 @@
 # 02 — Arquitetura de TI e Integração com Operadoras
 
-<!-- Adicione o print da página 02 aqui -->
+<img width="2962" height="1581" alt="02 — Arquitetura de TI e Integração com Operadoras drawio" src="https://github.com/user-attachments/assets/577d1293-6b4f-4bda-8c84-643674b4b35e" />
+
 
 Este diagrama aprofunda a visão técnica e coloca em evidência o principal diferencial de design da plataforma: o core de agendamento nunca conversa diretamente com nenhuma operadora de saúde.
 
