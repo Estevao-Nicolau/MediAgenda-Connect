@@ -1,6 +1,6 @@
 # 04 — Camada 2: Core de Agendamento
 
-<img width="1811" height="1415" alt="04 — Camada 2_ Core de Agendamento drawio" src="https://github.com/user-attachments/assets/2bcc91f0-eac2-4ec5-a34d-ea5c88e22e4f" />
+<img width="2151" height="896" alt="05 — Camada 3_ Integração Desacoplada com Operadoras drawio" src="https://github.com/user-attachments/assets/4e1e2e24-32b5-498d-b8e7-1d174c3eaba7" />
 
 
 Este é o coração da plataforma. Aqui vivem as regras de negócio da clínica e a decisão mais importante deste diagrama é o que está fora dele: nenhum serviço do core conhece detalhes técnicos de nenhuma operadora de saúde.
