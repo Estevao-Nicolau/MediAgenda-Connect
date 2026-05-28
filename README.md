@@ -1,230 +1,69 @@
 # MediAgenda Connect
 
-> Plataforma inteligente de agendamento médico, redução de faltas e integração com operadoras de saúde.
-
-**Case técnico de arquitetura cloud · C4 Model · BPMN · AWS**
+Plataforma de agendamento médico com integração desacoplada com operadoras de saúde, construída sobre AWS.
 
 ---
 
-## Sobre o projeto
+## O problema
 
-Este repositório documenta a arquitetura de solução do **MediAgenda Connect** — uma plataforma desenhada para transformar a jornada de agendamento médico de um processo manual e fragmentado em um fluxo digital, integrado e rastreável.
+Quem já tentou marcar uma consulta médica usando plano de saúde sabe como a experiência pode ser frustrante. Você liga para a clínica, a secretária precisa verificar o convênio, mas a operadora só responde depois. Você liga de novo. Às vezes descobre no dia da consulta que o plano está inativo ou que a procedimento não tem cobertura.
 
-A solução resolve cinco problemas reais enfrentados por clínicas no Brasil:
+Esse atrito não é culpa da clínica, nem da secretária, nem da operadora — é falta de integração entre as partes. E esse problema se repete em milhares de clínicas no Brasil todos os dias.
 
-- Agendamento e confirmação ainda dependem de ligações e planilhas
-- Validação de convênio acontece tarde — no dia da consulta, quando o atrito já está instaurado
-- Pacientes faltam ou cancelam em cima da hora, deixando horários ociosos sem reaproveitamento
-- Equipe de recepção gasta tempo em retrabalho que poderia ser automatizado
-- Gestores sem visibilidade de ocupação, faltas e pendências de convênio em tempo real
-
-**Resultado esperado:** menos retrabalho, menos horário ocioso e mais previsibilidade operacional para clínica e paciente.
+Do lado da clínica, o impacto é direto: horários ociosos por falta ou cancelamento de última hora, equipe consumida por retrabalho manual e nenhuma visibilidade sobre o que está acontecendo na agenda.
 
 ---
 
-## Diferencial arquitetural
+## A solução
 
-O diferencial da solução não é apenas marcar consulta.
+O MediAgenda Connect resolve isso em três frentes:
 
-A plataforma **desacopla o core de agendamento da complexidade de integração com operadoras**, usando uma camada de adapters isolados por padrão de protocolo (REST/FHIR, TISS/XML, APIs proprietárias), filas assíncronas, auditoria e retentativas.
+**Digitaliza a jornada**: paciente agenda, confirma, cancela ou remarca pelo portal ou app, sem depender de ligação.
 
-Se uma operadora usa TISS/XML e outra usa API REST, o fluxo interno da plataforma não muda — apenas o adapter de comunicação.
+**Antecipa as validações**: elegibilidade, cobertura e autorização são verificadas antes do dia da consulta, não no balcão.
 
----
-
-## Arquitetura em camadas
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Canais e Perfis de Acesso                    │
-│  Paciente (Web/App) · Recepção · Médico · Gestor (Dashboard)    │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │ HTTPS
-┌──────────────────────────────▼──────────────────────────────────┐
-│               Borda, Segurança e Entrada de APIs                │
-│       CloudFront + WAF · Cognito/IAM · API Gateway · TLS        │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────────┐
-│         Núcleo do Sistema de Agendamento (core isolado)         │
-│  Agendamento · Elegibilidade · Cobertura/Autorização            │
-│  Fila de Espera · Indicadores · Step Functions (orquestração)   │
-└──────┬────────────────────────────────────────────┬────────────┘
-       │ eventos                                     │ comandos de integração
-┌──────▼────────────────┐          ┌─────────────────▼────────────┐
-│ Orquestração e Filas  │          │  Camada de Integração         │
-│ Step Functions        │          │  Integration Facade           │
-│ EventBridge           │          │  Adapter REST/FHIR            │
-│ SQS Integração        │          │  Adapter TISS/XML             │
-│ SQS Notificações      │          │  Adapter Proprietário         │
-│ DLQ + Retry           │          │  SQS + Retry + DLQ            │
-└──────┬────────────────┘          └─────────────────┬────────────┘
-       │                                             │
-┌──────▼─────────────────────────────────────────────▼────────────┐
-│              Dados, Segurança, Auditoria e Observabilidade       │
-│  RDS PostgreSQL · DynamoDB · S3 Data Lake · QuickSight          │
-│  KMS · Secrets Manager · IAM · CloudTrail · CloudWatch · X-Ray  │
-└─────────────────────────────────────────────────────────────────┘
-```
+**Reaproveit cancelamentos**: quando um horário é cancelado, a fila de espera é acionada automaticamente. O próximo paciente recebe um convite e tem 30 minutos para aceitar o encaixe.
 
 ---
 
-## Stack de tecnologias
+## Arquitetura
 
-| Camada | Tecnologias |
+A decisão central de design foi proteger o núcleo de agendamento da complexidade de integração com operadoras. O core cuida da jornada da consulta. Uma camada separada, com adapters isolados por protocolo, cuida de conversar com cada operadora no formato que ela entende — REST/FHIR, TISS/XML ou API proprietária — sem que isso afete nada do fluxo principal.
+
+Os diagramas estão organizados na pasta [`/docs`](./docs), do mais geral para o mais específico:
+
+| Arquivo | O que mostra |
 |---|---|
-| Frontend / CDN | Amazon S3, Amazon CloudFront |
-| Proteção de borda | AWS WAF |
-| Autenticação | Amazon Cognito, AWS IAM |
-| API | Amazon API Gateway |
-| Orquestração | AWS Step Functions |
-| Compute | AWS Lambda, Amazon ECS Fargate |
-| Integração | Amazon SQS, Amazon EventBridge |
-| Cache | Amazon ElastiCache (Redis) |
-| Banco transacional | Amazon RDS PostgreSQL (Multi-AZ) |
-| Notificações | Amazon SNS, Amazon Pinpoint |
-| Analytics | Amazon S3 (Data Lake), AWS Glue, Amazon Athena, Amazon QuickSight |
-| Segurança | AWS KMS, AWS Secrets Manager |
-| Observabilidade | Amazon CloudWatch, AWS CloudTrail, AWS X-Ray |
-| Integração externa | REST/FHIR R4, TISS/SOAP XML |
+| [01 — Arquitetura de Solução](./docs/01-arquitetura-solucao.md) | Visão completa da plataforma e seus blocos |
+| [02 — Arquitetura de TI e Operadoras](./docs/02-arquitetura-ti-operadoras.md) | Camadas técnicas e integração desacoplada |
+| [03 — Canais e Entrada Segura](./docs/03-camada-canais-entrada-segura.md) | Borda, autenticação e proteção web |
+| [04 — Core de Agendamento](./docs/04-camada-core-agendamento.md) | Serviços de negócio e orquestração |
+| [05 — Integração com Operadoras](./docs/05-camada-integracao-operadoras.md) | Adapters, modelo canônico e resiliência |
+| [06 — Eventos, Filas e Resiliência](./docs/06-camada-eventos-filas-resiliencia.md) | Processamento assíncrono e tratamento de falhas |
+| [07 — Dados, Indicadores e Analytics](./docs/07-camada-dados-analytics.md) | Persistência transacional e analítica |
+| [08 — Segurança, LGPD e Observabilidade](./docs/08-camada-seguranca-lgpd.md) | Controles transversais de segurança |
+| [09 — C4 Nível 1: Contexto](./docs/09-c4-contexto.md) | Sistema e atores externos |
+| [10 — C4 Nível 2: Containers](./docs/10-c4-containers.md) | Componentes internos e protocolos |
+| [11 — Arquitetura AWS](./docs/11-arquitetura-aws.md) | Topologia de infraestrutura e deployment |
+| [12 — BPMN: Agendamento](./docs/12-bpmn-agendamento.md) | Fluxo de agendamento com validação de convênio |
+| [13 — BPMN: Cancelamento](./docs/13-bpmn-cancelamento.md) | Cancelamento e reaproveitamento de slot |
 
 ---
 
-## Processos mapeados (BPMN)
+## AWS
 
-### Processo 1 — Agendamento com Validação de Convênio
+AWS Lambda · ECS Fargate · Step Functions · API Gateway · EventBridge · SQS · SNS · Pinpoint · RDS PostgreSQL · ElastiCache Redis · S3 · Glue · Athena · QuickSight · CloudFront · WAF · Cognito · KMS · Secrets Manager · CloudWatch · CloudTrail · X-Ray
 
-Fluxo principal: desde a solicitação do paciente até confirmação ou rejeição pelo convênio.
-
-```
-Paciente agenda → Verificação de disponibilidade (lock 10 min)
-→ Validação de elegibilidade na operadora
-→ Solicitação de autorização prévia
-→ [Aprovado] Confirma agendamento + notificação
-→ [Pendente] Recepção resolve em 48h
-→ [Negado] Cancela + notifica paciente
-→ [Slot ocupado] Oferece fila de espera FIFO
-```
-
-### Processo 2 — Cancelamento e Reaproveitamento de Slot
-
-Gerenciamento de cancelamentos com ativação automática da fila de espera.
-
-```
-Paciente cancela → Libera slot → Publica evento SlotLiberado
-→ Verifica fila de espera (FIFO)
-→ [Há candidatos] Notifica 1º da fila (30 min para aceitar)
-  → [Aceita] Confirma encaixe
-  → [Recusa/Timeout] Avança para próximo candidato
-→ [Sem candidatos] Slot livre para novos agendamentos
-```
-
----
-
-## C4 Model
-
-O projeto foi documentado seguindo o C4 Model em dois níveis:
-
-**Nível 1 — Contexto do Sistema:** relação entre a plataforma e seus atores externos (pacientes, clínica, operadoras de saúde, provedor de notificações e IdP).
-
-**Nível 2 — Containers:** todos os containers AWS e suas responsabilidades, com os protocolos de comunicação entre eles.
-
-Os diagramas completos estão na pasta [`/docs/architecture`](./docs/architecture).
-
----
-
-## Integração com operadoras de saúde
-
-A plataforma suporta três padrões de integração:
-
-| Operadora | Protocolo | SLA |
-|---|---|---|
-| Operadora A | REST / FHIR R4 | 99,5% |
-| Operadora B | TISS / SOAP XML | 99,0% |
-| Operadora C | API legada / proprietária | 98,0% |
-
-Cada operadora tem um **adapter isolado**. O core de agendamento trabalha apenas com comandos internos (`validar elegibilidade`, `solicitar autorização`) — nunca com detalhes técnicos de protocolo.
-
-Falhas são tratadas com **retry exponencial + DLQ**, garantindo que instabilidade em uma operadora não afeta o fluxo do paciente nem as demais operadoras.
-
----
-
-## Indicadores (KPIs)
-
-| KPI | Objetivo |
-|---|---|
-| Taxa de faltas | ↓ Reduzir |
-| Taxa de ocupação da agenda | ↑ Aumentar |
-| Tempo médio de confirmação | ↓ Reduzir |
-| Horários reaproveitados (fila de espera) | ↑ Aumentar |
-| Pendências de convênio no dia da consulta | ↓ Reduzir |
-| SLA de integração com operadoras | Monitorar disponibilidade por adapter |
+Integração externa: REST/FHIR R4 · TISS/SOAP XML
 
 ---
 
 ## Roadmap
 
-| Fase | Escopo |
-|---|---|
-| **Fase 1 · MVP** | Agenda digital, confirmação e lembretes, fila de espera, dashboard básico |
-| **Fase 2 · Integração** | Elegibilidade, cobertura e autorização com operadoras, retentativas e auditoria |
-| **Fase 3 · Otimização** | Predição de faltas (ML), relatórios avançados, integração com prontuário |
+O projeto foi pensado para ser construído em fases, começando pelo que entrega valor mais rápido e avançando para o que exige mais maturidade técnica e operacional.
 
----
+**Fase 1 — MVP:** agenda digital, confirmação automática, lembretes, fila de espera e dashboard básico de ocupação.
 
-## Segurança e LGPD
+**Fase 2 — Integração:** validação de elegibilidade, cobertura e autorização com operadoras de saúde, com retentativas e auditoria.
 
-A arquitetura trata segurança e privacidade como capacidades transversais desde o design — não como adendo.
-
-- **Criptografia em trânsito:** TLS em todas as comunicações
-- **Criptografia em repouso:** AWS KMS para dados sensíveis (RDS, S3, backups)
-- **Acesso mínimo:** IAM com menor privilégio por serviço e função
-- **Segredos:** credenciais de operadoras isoladas por operadora no Secrets Manager
-- **Auditoria técnica:** CloudTrail para ações administrativas na AWS
-- **Auditoria de negócio:** Audit Log customizado para eventos do domínio (quem validou, qual resposta da operadora, qual status da autorização)
-- **Observabilidade:** CloudWatch + X-Ray para logs, métricas, tracing e alarmes
-
----
-
-## Estrutura do repositório
-
-```
-/
-├── README.md
-├── docs/
-│   ├── architecture/
-│   │   ├── c4-context.drawio
-│   │   ├── c4-containers.drawio
-│   │   └── aws-deployment.drawio
-│   ├── bpmn/
-│   │   ├── processo-1-agendamento.bpmn
-│   │   └── processo-2-cancelamento.bpmn
-│   ├── adr/
-│   │   ├── ADR-001-core-desacoplado-das-operadoras.md
-│   │   ├── ADR-002-integration-facade-adapters.md
-│   │   ├── ADR-003-processamento-assincrono-sqs.md
-│   │   └── ADR-004-rds-transacional-s3-analitico.md
-│   └── analysis/
-│       └── MediAgenda_Connect_Analise_Arquitetura.md
-└── presentation/
-    └── MediAgenda_Connect_Apresentacao_Completa.pptx
-```
-
----
-
-## Decisões arquiteturais
-
-As principais decisões de arquitetura estão documentadas como ADRs (Architecture Decision Records) na pasta [`/docs/adr`](./docs/adr).
-
-Resumo das decisões-chave:
-
-1. **Core desacoplado das operadoras** — o agendamento não depende do formato técnico de cada operadora
-2. **Integration Facade + Adapters** — suporte a REST/FHIR, TISS/XML e APIs proprietárias sem reescrever o core
-3. **Processamento assíncrono** — SQS e EventBridge evitam travar o fluxo do paciente quando uma operadora falha
-4. **Retentativas e DLQ** — falhas transitórias são reprocessadas; falhas finais ficam rastreáveis
-5. **RDS para transacional, S3 para analítico** — separação que evita queries pesadas impactando o banco operacional
-6. **Segurança by design** — KMS, Secrets Manager, IAM, CloudTrail e WAF desde o início
-
----
-
-*Case técnico de arquitetura — MediAgenda Connect*
+**Fase 3 — Otimização:** predição de risco de falta com machine learning, relatórios avançados e integração com prontuário eletrônico.
