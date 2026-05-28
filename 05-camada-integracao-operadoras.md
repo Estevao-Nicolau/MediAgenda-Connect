@@ -1,6 +1,6 @@
 # 05 — Camada 3: Integração Desacoplada com Operadoras
 
-<img width="2151" height="896" alt="05 — Camada 3_ Integração Desacoplada com Operadoras drawio" src="https://github.com/user-attachments/assets/28057616-9cc7-4216-926c-49b0d9301907" />
+<img width="2242" height="1286" alt="06 — Camada 4_ Eventos, Filas e Resiliência drawio" src="https://github.com/user-attachments/assets/c5d28399-4ea2-457d-a787-1b573be63364" />
 
 
 Este diagrama detalha o diferencial arquitetural da plataforma. A premissa é simples: operadoras de saúde são heterogêneas. Algumas têm APIs REST modernas seguindo o padrão FHIR. Outras ainda usam TISS com SOAP XML, um padrão legado mas amplamente adotado no mercado brasileiro. Outras têm APIs proprietárias sem padrão definido. Se o core de agendamento tivesse que lidar com essa heterogeneidade diretamente, qualquer mudança em uma operadora exigiria mexer no fluxo principal — um risco alto demais para um sistema de saúde em produção.
