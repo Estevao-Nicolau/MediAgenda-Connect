@@ -8,7 +8,7 @@ Plataforma de agendamento médico com integração desacoplada com operadoras de
 
 Quem já tentou marcar uma consulta médica usando plano de saúde sabe como a experiência pode ser frustrante. Você liga para a clínica, a secretária precisa verificar o convênio, mas a operadora só responde depois. Você liga de novo. Às vezes descobre no dia da consulta que o plano está inativo ou que a procedimento não tem cobertura.
 
-Esse atrito não é culpa da clínica, nem da secretária, nem da operadora — é falta de integração entre as partes. E esse problema se repete em milhares de clínicas no Brasil todos os dias.
+Esse atrito não é culpa da clínica, nem da secretária, nem da operadora é falta de integração entre as partes. E esse problema se repete em milhares de clínicas no Brasil todos os dias.
 
 Do lado da clínica, o impacto é direto: horários ociosos por falta ou cancelamento de última hora, equipe consumida por retrabalho manual e nenhuma visibilidade sobre o que está acontecendo na agenda.
 
@@ -28,7 +28,7 @@ O MediAgenda Connect resolve isso em três frentes:
 
 ## Arquitetura
 
-A decisão central de design foi proteger o núcleo de agendamento da complexidade de integração com operadoras. O core cuida da jornada da consulta. Uma camada separada, com adapters isolados por protocolo, cuida de conversar com cada operadora no formato que ela entende — REST/FHIR, TISS/XML ou API proprietária — sem que isso afete nada do fluxo principal.
+A decisão central de design foi proteger o núcleo de agendamento da complexidade de integração com operadoras. O core cuida da jornada da consulta. Uma camada separada, com adapters isolados por protocolo, cuida de conversar com cada operadora no formato que ela entende REST/FHIR, TISS/XML ou API proprietária sem que isso afete nada do fluxo principal.
 
 Os diagramas estão organizados na pasta [`/docs`](./docs), do mais geral para o mais específico:
 
